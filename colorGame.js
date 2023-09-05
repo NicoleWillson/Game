@@ -1,47 +1,82 @@
-// notice properties takeTurn and id are being passed in
-const Square = ({ takeTurn, id }) => {
-  const palet = ["blue", "red", "green"];
-  // id is the square's number
-  // We call takeTurn to tell Parent we have clicked in this square
+const checkForWinner = (state) => {
+  const win = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 5, 6],
+  ];
+  for (let i=0; i<win.length; i++) {
+    const [a,b,c] = win[i];
+    if (state[a] != null && state[a] === state[b] && state[a] === state[c]) return state[a];
+  }
+  return null;
+};
 
-  const [color, setColor] = React.useState(2);
+const Square = ({id,newState}) => {
+  const [color,setColor] = React.useState("green");
+  const [status, setStatus] = React.useState(null);
+  const xo = ["O","X"];
+  const palette = ['red','blue','green'];
+  const getRandomColor = () => palette[Math.floor(Math.random() * 3)];
+
+  React.useEffect(() => {
+    console.log(`Render ${id}`);
+    return () => console.log(`unmounting Square ${id}`);
+  });
 
   return (
-    <button
-      onClick={(e) => {
-        setColor(takeTurn(id));
-        e.preventDefault();
-        e.target.style.background = palet[color];
-      }}
-    ></button>
+    <button onClick={e => {
+      let col = getRandomColor();
+      setColor(col);
+      let nextPlayer = newState(id);
+      setStatus(nextPlayer);
+      e.target.style.background = col;
+    }}>
+      <h1>{xo[status]}</h1>
+    </button>
   );
 };
 
 const Board = () => {
-  // 1st player is 1
-  // State keeps track of next player
   const [player, setPlayer] = React.useState(1);
-
-  // check for winner (see superset.js)
+  const [state, setState] = React.useState(Array(9).fill(null));
   let status = `Player ${player}`;
-  console.log(`Status Player ${status}`);
+  let winner = checkForWinner(state);
+  if (winner != null) status = `Player ${winner} wins!`
+  
+  const newState = idOfSquare => {
+    let thePlayer = player;
+    state[idOfSquare] = player;
+    setState(state);
+    let nextplayer = (player + 1) % 2;
+    setPlayer(nextplayer);
 
-  // Note that Child (Square Component) calls this function
-  // However the function has access to the player held here
-  const takeTurn = (id) => {
-    setPlayer((player + 1) % 2); // get next player
-    return player;
-  };
-  function renderSquare(i, color) {
-    // use properties to pass callback function takeTurn to Child
-    return <Square takeTurn={takeTurn} id={i}></Square>;
+    return thePlayer;
+  }
+
+  function renderSquare(i) {
+    return <Square id={i} newState={newState}></Square>;
   }
   return (
-    <div className="game-board">
-      <div className="grid-row">
-        {renderSquare(0)}
-        {renderSquare(1)}
-        {renderSquare(2)}
+    <div
+      className="game-board"
+      onClick={(e) => {
+        setPlayer((player + 1) % 2);
+        status = `Player ${player}`;
+      }}
+    >
+      <div className='grid-row'>
+        {renderSquare(0)} {renderSquare(1)}{renderSquare(2)}
+      </div>
+      <div className='grid-row'>
+        {renderSquare(3)} {renderSquare(4)}{renderSquare(5)}
+      </div>
+      <div className='grid-row'>
+        {renderSquare(6)} {renderSquare(7)}{renderSquare(8)}
       </div>
       <div id="info">
         <h1>{status}</h1>
@@ -50,14 +85,6 @@ const Board = () => {
   );
 };
 
-const Game = () => {
-  return (
-    <div className="game">
-      <Board></Board>
-    </div>
-  );
-};
-
 // ========================================
 
-ReactDOM.render(<Game />, document.getElementById("root"));
+ReactDOM.render(<Board />, document.getElementById("root"));
