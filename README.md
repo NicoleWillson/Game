@@ -1,5 +1,7 @@
 # Game
 MIT tictactoe assignment
+The only files I've modified are colorGame.js and standalone.html  The others are from the starter files for the MITxPro module 16 exercises.
+
 
 Features I'd like to implement: 
 
